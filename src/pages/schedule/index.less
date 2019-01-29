@@ -1,0 +1,124 @@
+@dayBlock: 26px;
+@workColor: #fa8c16;
+@restColor: #a0d911;
+
+.tooltip {
+  pointer-events: none;
+}
+
+.days {
+  .day {
+    display: inline-block;
+    width: @dayBlock;
+    height: @dayBlock;
+    box-sizing: border-box;
+    border: 1px solid #FFF;
+    overflow: hidden;
+    text-align: center;
+    color: #FFF;
+    line-height: @dayBlock;
+    font-size: 12px;
+    background: @workColor;
+
+    &.rest {
+      background: @restColor;
+    }
+
+    &:hover {
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+  }
+}
+
+.excludes {
+  border: 1px solid #CCC;
+  position: relative;
+  border-radius: 3px;
+  padding: 15px 8px;
+
+  h3 {
+    font-size: 12px;
+    display: inline-block;
+    padding: 0 3px;
+    font-weight: normal;
+    position: absolute;
+    background: #FFF;
+    top: -10px;
+    left: 3px;
+    color: #aaa;
+  }
+
+  .new {
+    display: block;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      margin-bottom: 8px;
+
+      a {
+        display: inline-block;
+        padding-right: 5px;
+      }
+
+      .who {
+        width: 70px;
+        margin: 0 3px;
+      }
+
+      .when {
+        display: inline-block;
+        margin: 0 3px;
+        width: 50px;
+      }
+    }
+  }
+}
+
+.logs {
+  white-space: pre-wrap;
+  background: #f4f4f4;
+  border: 1px solid #CCC;
+  padding: 15px 10px;
+  border-radius: 3px;
+}
+
+.result {
+  width: 100%;
+
+  tr, th, td {
+    border: 1px solid #000;
+  }
+
+  th {
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  th, td {
+    padding: 5px 10px;
+  }
+
+  .unit {
+    display: inline-block;
+    padding: 0 5px;
+    border-left: 1px solid #AAA;
+    color: @workColor;
+
+    &:first-child {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    &.rest {
+      color: @restColor;
+    }
+  }
+}
