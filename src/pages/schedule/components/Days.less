@@ -1,0 +1,32 @@
+@import '../index.less';
+
+@dayBlock: 26px;
+
+.tooltip {
+  pointer-events: none;
+}
+
+.days {
+  .day {
+    display: inline-block;
+    width: @dayBlock;
+    height: @dayBlock;
+    box-sizing: border-box;
+    border: 1px solid #FFF;
+    overflow: hidden;
+    text-align: center;
+    color: #FFF;
+    line-height: @dayBlock;
+    font-size: 12px;
+    background: @workColor;
+
+    &.rest {
+      background: @restColor;
+    }
+
+    &:hover {
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+  }
+}

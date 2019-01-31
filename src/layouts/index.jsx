@@ -8,10 +8,10 @@ const { Header, Content, Footer } = Layout;
 document.title = '日程安排';
 
 export default class Home extends React.Component {
+  // render() {
+  //   return (this.props.children);
+  // }
   render() {
-    return (this.props.children);
-  }
-  render1() {
     const { children } = this.props;
     return (
       <Layout className="layout">

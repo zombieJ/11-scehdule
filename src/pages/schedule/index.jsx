@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button, Input, Icon, Select, Row, Col, Tooltip, Form } from 'antd';
 import classNames from 'classnames';
 import { useInput } from '@/utils/useHooks';
+
+import Days from './components/Days';
+import { startCalculate, stopCalculate } from './calculator.ts';
 import styles from './index.less';
 
 const { Option } = Select;
@@ -52,143 +55,25 @@ export default function() {
   // Clean up
   useEffect(() => {
     return () => {
-      clearInterval(intervalRef.current);
+      stopCalculate();
     };
   }, []);
 
-  // Looper
-  function process() {
-    const myDays = new Array(daysProps.value)
-      .fill()
-      .map((_, index) => (days[index] || {}));
-    const restDays = myDays.filter(day => day.rest).length;
-    const workDays = daysProps.value - restDays;
-    const avgWorkDays = workDays * dutyProps.value / countProps.value;
-    const avgRestDays = restDays * dutyProps.value / countProps.value;
-    
-    addLog('工作日', workDays, '天，休息日', restDays, '天');
-    addLog('人均工作日', avgWorkDays.toFixed(2), '天，休息日', avgRestDays.toFixed(2), '天');
-
-    // 计算
-    function getEnabledPlayers(dayIndex) {
-      const subScheduleList = scheduleList.slice(0, dayIndex);
-      const currentDay = days[dayIndex] || {};
-
-      const ids = {};
-      const workDutyIds = {};
-      const restDutyIds = {};
-
-      new Array(countProps.value)
-        .fill()
-        .forEach((_, id) => {
-          ids[id] = 100;
-          workDutyIds[id] = 0;
-          restDutyIds[id] = 0;
-        });
-
-      // =========== 时间搜索 ===========
-      subScheduleList.forEach((dayIds, scheduleIndex) => {
-        const day = days[scheduleIndex] || {};
-        const distance = dayIndex - scheduleIndex;
-          
-        dayIds.forEach(id => {
-          if (distance <= desProps.value) {
-            // 删除时间不对的
-            delete ids[id];
-          } else {
-            // 提升时间相距远的优先级
-            ids[id] += (distance + 1) * 10;
-          }
-
-          // 记录值班量
-          if (day.rest) {
-            restDutyIds[id] += 1;
-          } else {
-            workDutyIds[id] += 1;
-          }
-        });
-      });
-
-      // =========== 提升排班数量不够的人 ===========
-      const maxValue = Math.max(...Object.values(ids));
-      const maxWorkDuty = Math.max(...Object.values(workDutyIds));
-      const maxRestDuty = Math.max(...Object.values(restDutyIds));
-      Object.keys(ids).forEach((id) => {
-        if (currentDay.rest) {
-          ids[id] += (maxRestDuty - restDutyIds[id]) * maxValue;
-        } else {
-          ids[id] += (maxWorkDuty - workDutyIds[id]) * maxValue;
-        }
-      });
-
-      return Object.keys(ids).sort((id_a, id_b) => (
-        ids[id_b] - ids[id_a]
-      ));
-    }
-    const scheduleList = [];
-    for (let i = 0; i < myDays.length ; i += 1) {
-      const dayIds = getEnabledPlayers(i);
-      if (dayIds.length < dutyProps.value) {
-        addLog({ style: { color: 'red' } }, '没有匹配项，退出……');
-        return;
-      }
-
-      scheduleList.push(dayIds.slice(0, dutyProps.value));
-    }
-
-    // ====================== 统计结果 ======================
-    setCalculating(false);
-
-    const players = {};
-    scheduleList.forEach((ids, dayIndex) => {
-      const day = {
-        ...days[dayIndex],
-        index: dayIndex,
-      };
-
-      ids.forEach(id => {
-        const playerDays = players[id] = players[id] || [];
-        playerDays.push(day);
-      });
-    });
-
-    setResult({
-      scheduleList,
-      players,
-    });
-    console.log('>>>', scheduleList);
-
-    // let index = 0;
-    // return setInterval(() => {
-    //   index += 1;
-    //   addLog('序列', index, '……');
-
-    //   // 初始化
-    //   const seq = new Array(daysProps.value).fill().map(() => ({
-    //     who: [],
-    //   }));
-
-    //   // 优先处理周末
-    //   myDays.forEach((day, index) => {
-    //     const isRest = day.rest;
-    //     // if () {}
-    //   });
-    // }, 1000);
-  }
-
   // Submit
   function doCalculation() {
-    if (calculating) {
-      addLog({ style: { color: 'blue' } }, '中断，重新计算……');
-    } else {
-      addLog({ style: { color: 'blue' } }, '开始计算……');
-    }
-
-    // Do calculating
-    clearInterval(intervalRef.current);
-    intervalRef.current = process();
-
     setCalculating(true);
+    startCalculate({
+      dayCount: daysProps.value,
+      dayTypes: days,
+      playerCount: countProps.value,
+      dutyCount: dutyProps.value,
+      desCount: desProps.value,
+      excludeList: excludes,
+    }, addLog, (result) => {
+      console.log('Result:', result);
+      setResult(result);
+      setCalculating(false);
+    });
   }
 
   return (
@@ -230,32 +115,7 @@ export default function() {
             </Row>
 
             <Form.Item label="天数表">
-              <div className={styles.days}>
-                {new Array(daysProps.value).fill().map((_, index) => {
-                  const day = days[index] || {};
-                  return (
-                    <Tooltip
-                      title={`第 ${index + 1} 天`}
-                      overlayClassName={styles.tooltip}
-                      key={index}
-                    >
-                      <div
-                        className={classNames(styles.day, day.rest && styles.rest)}
-                        role="button"
-                        onClick={() => {
-                          const cloneDays = [...days];
-                          const newDay = { ...day };
-                          newDay.rest = !newDay.rest;
-                          cloneDays[index] = newDay;
-                          setDays(cloneDays);
-                        }}
-                      >
-                        {day.rest ? '休' : '工'}
-                      </div>
-                    </Tooltip>
-                  );
-                })}
-              </div>
+              <Days daysProps={daysProps} days={days} setDays={setDays} />
             </Form.Item>
 
             <div className={styles.excludes}>
@@ -336,20 +196,22 @@ export default function() {
               ))}
             </pre>
           }
+
+          {result && <pre>{JSON.stringify(result, null, 3)}</pre>}
           <table className={styles.result}>
             <tbody>
               {result && new Array(countProps.value).fill().map((_, index) => (
                 <tr key={index}>
                   <th>{index + 1} 号</th>
                   <td>
-                    {result.players[index].map(day => (
+                    {/* {result.players[index].map(day => (
                       <span
                         key={day.index}
                         className={classNames(styles.unit, day.rest && styles.rest)}
                       >
                         第 {day.index + 1} 天
                       </span>
-                    ))}
+                    ))} */}
                   </td>
                 </tr>
               ))}
