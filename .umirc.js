@@ -1,5 +1,5 @@
 export default {
-  targets: {
-    ie: 10,
-  },
+  history: 'hash',
+  base: '/11-schedule',
+  publicPath: '/11-schedule/'
 }
