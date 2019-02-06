@@ -19,6 +19,7 @@ function renderColumns(dayTypes: Array<DayType | null>) {
       dataIndex: 'id',
       key: 'id',
       width: 100,
+      render:(id: string) => Number(id) + 1,
     },
     {
       title: '排班',

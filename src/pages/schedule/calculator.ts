@@ -1,3 +1,9 @@
+const BASIC_PRIORITY = 10000; // 基本优先级
+const LOOP_INTERVAL = 30; // 循环间隔
+const DUPLICATE_RECENT = 0.9 // 最近工作过优先级修正
+const DUPLICATE_WORK = 0.8 // 工作日重复时优先级修正
+const DUPLICATE_REST = 0.5 // 休息日重复时优先级修正
+
 let id: number | null = null;
 
 export interface DaySchedule {
@@ -32,15 +38,17 @@ function getPlayersByPriority(condition: Condition, daySchedules: DaySchedule[])
   const currentDay = lastDay + 1;
 
   const playersPriority: { [id: string]: number } = {};
-  const playerDays: { [id: string]: number[] } = {};
+  const playerWorkDays: { [id: string]: number[] } = {};
+  const playerRestDays: { [id: string]: number[] } = {};
 
   // 初始化计数器
   for (let i = 0; i < playerCount; i += 1) {
-    playersPriority[i] = 1;
-    playerDays[i] = [];
+    playersPriority[i] = BASIC_PRIORITY;
+    playerWorkDays[i] = [];
+    playerRestDays[i] = [];
   }
 
-  function updatePriority(playerId: string, callback: (value: number) => number) {
+  function updatePriority(playerId: string | number, callback: (value: number) => number) {
     if (playerId in playersPriority) {
       playersPriority[playerId] = callback(playersPriority[playerId]);
     }
@@ -66,23 +74,33 @@ function getPlayersByPriority(condition: Condition, daySchedules: DaySchedule[])
     const { players } = daySchedules[i];
     const distance = i + 1;
     players.forEach(id => {
-      updatePriority(id, value => value * (0.8 ** distance));
+      updatePriority(id, value => value * (DUPLICATE_RECENT ** distance));
     });
   }
 
-  // 降低工作日总数优先级
+  // 降低日期类型相同时总数大的优先级
   const { rest: currentRest = false } = dayTypes[currentDay] || {};
   daySchedules.forEach(({ players }, index) => {
     const { rest = false } = dayTypes[index] || {};
     players.forEach(id => {
-      const player = playerDays[id];
-      if (currentRest === rest) {
-        player.push(index);
+      const playerWork = playerWorkDays[id];
+      const playerRest = playerRestDays[id];
+      if (rest) {
+        playerRest.push(index);
+      } else {
+        playerWork.push(index);
       }
     });
   });
-  
-  console.log('>>>', playerDays);
+  for (let i = 0; i < playerCount; i += 1) {
+    const id = i;
+
+    const workDayCount = playerWorkDays[id].length;
+    const restDayCount = playerRestDays[id].length;
+    updatePriority(id, value => value * (DUPLICATE_WORK ** workDayCount));
+    updatePriority(id, value => value * (DUPLICATE_REST ** restDayCount));
+  }
+  console.log(daySchedules.length, currentRest, '>>>>>>>>', playersPriority);
 
   return Object.keys(playersPriority).sort((id1, id2) => (
     playersPriority[id2] - playersPriority[id1]
@@ -128,7 +146,7 @@ export function startCalculate(condition, log, callback) {
     if (currentDay === dayCount) {
       finish(daySchedules);
     }
-  }, 100);
+  }, LOOP_INTERVAL);
 }
 
 
