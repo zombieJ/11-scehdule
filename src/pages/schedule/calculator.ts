@@ -1,10 +1,10 @@
 let id: number | null = null;
 
-interface DaySchedule {
+export interface DaySchedule {
   players: string[];
 }
 
-type DayType = { rest?: boolean };
+export type DayType = { rest?: boolean };
 
 interface Condition {
   dayCount: number;
@@ -102,7 +102,7 @@ export function startCalculate(condition, log, callback) {
   function finish(daySchedules: DaySchedule[] | null) {
     stopCalculate();
     log({ style: { color: 'blue' } }, '计算完成……');
-    callback(daySchedules);
+    callback(daySchedules && { daySchedules, dayTypes });
   }
 
   // 初始化数值

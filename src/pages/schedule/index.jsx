@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { useInput } from '@/utils/useHooks';
 
 import Days from './components/Days';
+import Preview from './components/Preview';
 import { startCalculate, stopCalculate } from './calculator.ts';
 import styles from './index.less';
 
@@ -197,26 +198,27 @@ export default function() {
             </pre>
           }
 
-          {result && <pre>{JSON.stringify(result, null, 3)}</pre>}
+          <Preview result={result} />
+          {/* {result && <pre>{JSON.stringify(result, null, 3)}</pre>}
           <table className={styles.result}>
             <tbody>
               {result && new Array(countProps.value).fill().map((_, index) => (
                 <tr key={index}>
                   <th>{index + 1} 号</th>
                   <td>
-                    {/* {result.players[index].map(day => (
+                    {result.players[index].map(day => (
                       <span
                         key={day.index}
                         className={classNames(styles.unit, day.rest && styles.rest)}
                       >
                         第 {day.index + 1} 天
                       </span>
-                    ))} */}
+                    ))}
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table> */}
         </Col>
       </Row>
     </div>
